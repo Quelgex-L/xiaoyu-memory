@@ -1,0 +1,8 @@
+# xiaoyu-memory bundle patch
+# 独立扩展层，注册一个 Cordis service；不替代 whale-soul preset。
+- insert:
+    - id: xiaoyu-memory
+      name: xiaoyu-memory
+      config:
+        enabled: true
+        configPath: "./config.json"

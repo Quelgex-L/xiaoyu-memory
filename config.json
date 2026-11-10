@@ -1,0 +1,56 @@
+{
+  "memoryRoot": "~/.dsh/whale-soul/memory",
+  "vectorDir": "vector",
+  "ollama": {
+    "baseUrl": "http://127.0.0.1:11434",
+    "embeddingModel": "nomic-embed-text",
+    "embedDimension": 768,
+    "taskModel": "qwen2.5:7b",
+    "timeoutMs": 30000
+  },
+  "recall": {
+    "topK": 8,
+    "weights": {
+      "vector": 0.55,
+      "tag": 0.25,
+      "recency": 0.10,
+      "salience": 0.10
+    },
+    "pinnedBoost": 2.0
+  },
+  "emotion": {
+    "immediateWindowMs": 86400000,
+    "longWindowsMs": [86400000, 604800000, 2592000000],
+    "valenceRange": [-1, 1],
+    "arousalRange": [0, 1]
+  },
+  "forgetting": {
+    "defaultHalfLifeDays": 30,
+    "salientHalfLifeDays": 180,
+    "coreHalfLifeDays": 3650,
+    "archiveThreshold": 0.1,
+    "coldThreshold": 0.3
+  },
+  "triggers": [
+    {
+      "word": "小瑜",
+      "group": "persona",
+      "linkedTags": ["identity", "persona", "relationship"]
+    },
+    {
+      "word": "鲸鱼娘",
+      "group": "persona",
+      "linkedTags": ["identity", "persona"]
+    }
+  ],
+  "coreTopics": ["relationship", "preference", "promise", "identity", "boundary"],
+  "consolidation": {
+    "idleMs": 300000,
+    "checkIntervalMs": 900000,
+    "maxWritesPerRun": 40
+  },
+  "backfill": {
+    "dryRun": true,
+    "batchSize": 50
+  }
+}

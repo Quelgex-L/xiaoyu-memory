@@ -1,0 +1,28 @@
+# 系统与编辑器
+.DS_Store
+*.log
+*.swp
+.idea/
+.vscode/
+
+# 依赖与构建
+node_modules/
+dist/
+*.tgz
+
+# 本地快照与打包备份
+_backup/
+
+# 运行期记忆数据（实际落在 ~/.dsh 数据目录，此处兜底排除）
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+vectors.json
+galaxy-data.json
+galaxy-data.js
+backup-memories-*.json
+
+# 本地环境变量
+.env
+.env.*

@@ -1,0 +1,84 @@
+{
+  "name": "xiaoyu-memory",
+  "version": "0.1.1",
+  "description": "小瑜记忆系统：在 dsh-whale-soul 之上新增向量检索、双层情绪、冲突检测、暗号触发与记忆星图的独立扩展层。",
+  "type": "module",
+  "license": "MIT",
+  "main": "src/index.js",
+  "files": [
+    "src",
+    "scripts",
+    "config.json",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./src/index.js",
+    "./config": "./src/config.js",
+    "./store/meta-db": "./src/store/meta-db.js",
+    "./store/vector-index": "./src/store/vector-index.js",
+    "./store/embedding": "./src/store/embedding.js",
+    "./engine/recall": "./src/engine/recall.js",
+    "./engine/emotion": "./src/engine/emotion.js",
+    "./engine/conflict": "./src/engine/conflict.js",
+    "./engine/triggers": "./src/engine/triggers.js",
+    "./engine/consolidation": "./src/engine/consolidation.js",
+    "./engine/backfill": "./src/engine/backfill.js",
+    "./engine/migrate-legacy": "./src/engine/migrate-legacy.js",
+    "./engine/export-backup": "./src/engine/export-backup.js",
+    "./engine/extract": "./src/engine/extract.js",
+    "./engine/build-links": "./src/engine/build-links.js",
+    "./engine/build-galaxy": "./src/engine/build-galaxy.js"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "bash scripts/start-ollama.sh",
+    "health": "node scripts/health-check.mjs",
+    "test": "node src/selftest.js",
+    "links": "node src/engine/build-links.js",
+    "galaxy": "node src/engine/build-galaxy.js",
+    "backfill": "node src/engine/backfill.js",
+    "migrate-legacy": "node src/engine/migrate-legacy.js",
+    "backup": "node src/engine/export-backup.js",
+    "pack:check": "npm pack --dry-run"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dsh-plugin": {
+    "category": "identity",
+    "displayName": "小瑜记忆系统"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.5",
+    "@deepseek-ai/dsh-agent-preset": ">=0.2.1-rc.3 <0.3.0",
+    "@deepseek-ai/dsh-llm": ">=0.2.1-rc.3 <0.3.0",
+    "@deepseek-ai/dsh-system-prompt": ">=0.2.1-rc.3 <0.3.0",
+    "@deepseek-ai/dsh-home-paths": ">=0.2.1-rc.3 <0.3.0",
+    "@deepseek-ai/dsh-session-persistence-jsonl": ">=0.2.1-rc.3 <0.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-agent-preset": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-system-prompt": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-home-paths": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-session-persistence-jsonl": {
+      "optional": true
+    }
+  }
+}
