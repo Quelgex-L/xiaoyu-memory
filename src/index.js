@@ -6,7 +6,8 @@
 // 事件契约：
 //   session/event (session, event) → user/message、assistant/message、turn/end
 //   session/disposed (session) → 清理会话级缓存
-// 工具注册优先挂 agent.ctx.tools；插件 ctx 不声明 tools 服务，避免老版本激活失败。
+// 工具注册：tools 按官方契约声明进 inject（宿主缺服务时插件保持 inactive，而不是在
+// apply 中途抛 "without inject"）；读取统一走 ctx.reflect.get 安全探测，插件级优先、agent.ctx 兜底。
 import { loadConfig } from "./config.js";
 import { openDb, insertMemory, listMemories, getMemory } from "./store/meta-db.js";
 import { upsertVector, save as saveVectors, indexMeta, setIndexMeta } from "./store/vector-index.js";
@@ -19,9 +20,9 @@ import { extractCandidates, textOfContent, fingerprint } from "./engine/extract.
 import { recordEmotion, immediateMood, longTrend, emotionContextSummary } from "./engine/emotion.js";
 
 export const name = "xiaoyu-memory";
-// systemPrompt 是宿主已提供的服务（whale-soul 同机已声明并正常工作）；tools 不在此声明，
-// 老版本缺 tools 服务时不会让整个插件激活失败。
-export const inject = ["systemPrompt"];
+// systemPrompt、tools 均为宿主成熟服务（与同机正常工作的 whale-soul 写法一致）。
+// 可选服务写进 inject：宿主缺某服务时 Cordis 让插件保持 inactive，不会在 apply 中途抛错。
+export const inject = ["systemPrompt", "tools"];
 
 const CONTEXT_NAME = "xiaoyu:recall";
 
@@ -91,6 +92,20 @@ function hook(ctx, name, fn, tag) {
     return;
   }
   ctx.on?.(name, fn);
+}
+
+// 安全读取 tools 服务：优先 reflect.get（绕过 inject 校验，缺服务返回 undefined），
+// 再退直接属性；整体包 try/catch，避免在 Cordis 代理上下文里触发未注入 getter 抛错。
+function toolsOf(ctxx) {
+  if (!ctxx) return null;
+  try {
+    if (typeof ctxx.reflect?.get === "function") {
+      return ctxx.reflect.get("tools", false) || null;
+    }
+  } catch {
+    /* 继续退化到直接读取 */
+  }
+  return ctxx.tools ?? null;
 }
 
 export async function apply(ctx, config = {}) {
@@ -177,7 +192,7 @@ export async function apply(ctx, config = {}) {
     if (recallCache.sid === sid) recallCache.text = "";
   }, "session-disposed()");
 
-  // 4) 注册模型可调用工具：优先插件级 ctx.tools，缺失时退到 agent.ctx.tools；都缺就跳过，不影响启动
+  // 4) 注册模型可调用工具：插件级 tools 优先，agent.ctx.tools 兜底；都缺就跳过，不影响启动
   const registeredTools = new Set();
   const registerTools = (registry) => {
     if (!registry?.register) return;
@@ -187,8 +202,8 @@ export async function apply(ctx, config = {}) {
       catch (e) { console.warn("[xiaoyu-memory] 工具注册失败:", def.name, e.message); }
     }
   };
-  if (typeof ctx.tools?.register === "function") registerTools(ctx.tools);
-  hook(ctx, "agent/created", async ({ agent }) => registerTools(agent?.ctx?.tools), "tools()");
+  registerTools(toolsOf(ctx));
+  hook(ctx, "agent/created", async ({ agent }) => registerTools(toolsOf(agent?.ctx)), "tools()");
 
   // 5) 暴露手动 API（通过 Cordis provide 注册服务）
   const api = {
@@ -209,7 +224,7 @@ export async function apply(ctx, config = {}) {
     const disposeService = ctx.provide("xiaoyuMemory", api);
     ctx.effect?.(() => (typeof disposeService === "function" ? disposeService : () => {}), "xiaoyu-memory.dispose()");
   } else {
-    ctx.xiaoyuMemory = api;
+    try { ctx.xiaoyuMemory = api; } catch { /* 代理上下文不允许直接挂属性，忽略 */ }
   }
 
   // 6) 空闲整理调度
